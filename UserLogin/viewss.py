@@ -3,9 +3,7 @@ from UserRegistration.models import UserRegistrationModel
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from django.contrib.auth.hashers import check_password
-
 
 class UserLogin(APIView):
 
@@ -24,6 +22,16 @@ class UserLogin(APIView):
         if user:
             is_verified = check_password(data['password'],user.password)
             if is_verified:
+
+                # refresh = RefreshToken.for_user(user)
+                # access_token = str(refresh.access_token)
+                # refresh_token = str(refresh)
+
+                # token = {
+                #     'access_token': access_token,
+                #     'refresh_token': refresh_token
+                # }
+                
                 return Response({"Message":"Logged in SucssesFully",'data':{}}, status=status.HTTP_201_CREATED )
         
         return Response({'Massage': 'Invalid Username and Password',"data":{}}, status=status.HTTP_400_BAD_REQUEST)
