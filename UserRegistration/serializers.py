@@ -79,3 +79,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         instance.university_name = validated_data['university_name']
         instance.save()
         return instance
+
+class UserRegistrationDetailsSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = UserRegistrationModel
+        fields = ['user_id','user_name','email_id','mobile_number','student_id',
+                  'university_name','is_active','created_at','updated_at']
+    

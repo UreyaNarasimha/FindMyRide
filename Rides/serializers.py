@@ -2,7 +2,7 @@ from rest_framework import serializers
 from Rides.models import AvaliableRidersModel, RideBookingModel
 from UserRegistration.models import UserRegistrationModel
 
-class AvaliableRidesserializer(serializers.ModelSerializer): 
+class AvaliableRidersserializer(serializers.ModelSerializer): 
     riders_details = serializers.CharField(required=False)
     user_id = serializers.CharField(required=False)
     pickup_address = serializers.CharField(required=False)

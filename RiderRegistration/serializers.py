@@ -87,3 +87,10 @@ class RiderRegistrationSerializer(serializers.ModelSerializer):
         instance.zipcode = validated_data['zipcode']
         instance.save()
         return instance
+
+class RiderRegistrationDetailsSerializer(serializers.ModelSerializer): 
+    
+    class Meta:
+        model = RiderRegistrationModel
+        fields = ['rider_id','rider_name','email_id','mobile_number','student_id','university_name',
+                  'drivers_license_id','address','zipcode','is_active','created_at','updated_at']

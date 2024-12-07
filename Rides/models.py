@@ -19,6 +19,7 @@ class RideBookingModel(models.Model):
     pickup_zipcode = models.CharField(max_length=255)
     destination = models.TextField()
     is_cancelled = models.BooleanField(default=False)
+    is_ride_completed = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

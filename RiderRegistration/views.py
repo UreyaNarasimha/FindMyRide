@@ -3,7 +3,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from RiderRegistration.models import RiderRegistrationModel
-from RiderRegistration.serializers import RiderRegistrationSerializer
+from RiderRegistration.serializers import RiderRegistrationSerializer, RiderRegistrationDetailsSerializer
+from django.db.models import Q
+from rest_framework.pagination import PageNumberPagination
 
 class RiderRegistration(APIView):
 
@@ -18,9 +20,33 @@ class RiderRegistration(APIView):
     
     def get(self,request):
         
+        query_type = request.query_params.get('query', None)
+        value = request.query_params.get('value', None)  
+
         rider_data = RiderRegistrationModel.objects.all()
-        serializer = RiderRegistrationSerializer(rider_data,many=True)
-        return Response({'message':serializer.data},status=status.HTTP_200_OK)
+
+        if query_type == 'search' and value:
+            rider_data = rider_data.filter(
+                Q(rider_name__icontains=value) |
+                Q(email_id__icontains=value)
+            )
+            if not rider_data:
+                return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+        
+        elif query_type == 'sort' and value:
+            rider_data = rider_data.order_by(value)
+            if not rider_data:
+                return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 10  # page size
+        paginated_user_data = paginator.paginate_queryset(rider_data, request)
+        
+        try:
+           serializer = RiderRegistrationDetailsSerializer(paginated_user_data,many=True)
+           return paginator.get_paginated_response({'message': 'Rider Details','data':serializer.data})
+        except:
+            return Response({"message":"Something went wrong",'data':{}},status=status.HTTP_400_BAD_REQUEST)
 
 class RiderRegistrationDetail(APIView):
 
