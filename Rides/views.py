@@ -239,7 +239,7 @@ class CSVFileGenerator(APIView):
         
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         file_name = 'ridesbookings_{}_csv'.format(timestamp)
-        file_path = os.path.join(r'C:\Users\ureya\Downloads', file_name)  # Replace with your desired directory
+        file_path = os.path.join(r'', file_name)  # Replace with your desired directory
 
         data = RideBookingModel.objects.all()
 
@@ -282,7 +282,7 @@ class CSVFileGenerator(APIView):
         
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         file_name = 'avaliableriders_{}_csv'.format(timestamp)
-        file_path = os.path.join(r'C:\Users\ureya\Downloads', file_name)  # Replace with your desired directory
+        file_path = os.path.join(r'', file_name)  # Replace with your desired directory
 
         data = AvaliableRidersModel.objects.all()
 
