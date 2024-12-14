@@ -24,7 +24,7 @@ class AvaliableRidersserializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"message":"Pickup Zipcode is required feild"})
         if 'destination' not in validated_data:
             raise serializers.ValidationError({"message":"Destination is required feild"}) 
-        if not UserRegistrationModel.objects.filter(user_id=validated_data['user_id'],is_active=True):
+        if not UserRegistrationModel.objects.filter(id=validated_data['user_id'],is_active=True):
             raise serializers.ValidationError({'message':'User not found','data':{}})
 
         return validated_data

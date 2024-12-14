@@ -6,8 +6,8 @@ from rest_framework import status
 import re
 
 class UserRegistrationSerializer(serializers.ModelSerializer): 
-    user_name = serializers.CharField(required=False)
-    email_id = serializers.CharField(required=False)
+    username = serializers.CharField(required=False)
+    email = serializers.CharField(required=False)
     password = serializers.CharField(required=False)
     confirm_password = serializers.CharField(required=False)
     mobile_number = serializers.CharField(required=False)
@@ -16,16 +16,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = UserRegistrationModel
-        fields = ['user_id','user_name','email_id','password','confirm_password','mobile_number','student_id',
+        fields = ['id','username','email','password','confirm_password','mobile_number','student_id',
                   'university_name','is_active','created_at','updated_at']
     
     
     def validate(self,validated_data):
         
-        if 'user_name' not in validated_data:
-            raise serializers.ValidationError({"message":"User name is required feild"})
-        if 'email_id' not in validated_data:
-            raise serializers.ValidationError({"message":"EmailID is required feild"})
+        if 'username' not in validated_data:
+            raise serializers.ValidationError({"message":"Username is required feild"})
+        if 'email' not in validated_data:
+            raise serializers.ValidationError({"message":"Email is required feild"})
         if 'password' not in validated_data:
             raise serializers.ValidationError({"message":"Password is required feild"})
         if not self.instance:
@@ -44,9 +44,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'message':"Password and Confirm Password should be same"})
         
         if not self.instance:
-            if UserRegistrationModel.objects.filter(user_name=validated_data['user_name']):
+            if UserRegistrationModel.objects.filter(username=validated_data['username']):
                 raise serializers.ValidationError({"message":"User name already exists"})
-            if UserRegistrationModel.objects.filter(email_id=validated_data['email_id']):
+            if UserRegistrationModel.objects.filter(email=validated_data['email']):
                 raise serializers.ValidationError({"message":"EmailID already exists"})
             if UserRegistrationModel.objects.filter(mobile_number=validated_data['mobile_number']):
                 raise serializers.ValidationError({"message":"Mobile Number already exists"})

@@ -1,7 +1,7 @@
 from django.db import models
 
 class RiderRegistrationModel(models.Model):
-    rider_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     rider_name = models.CharField(max_length=255)
     email_id = models.CharField(max_length=255)
     password = models.CharField(max_length=255)

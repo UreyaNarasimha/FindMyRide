@@ -1,9 +1,10 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
-class UserRegistrationModel(models.Model):
-    user_id = models.AutoField(primary_key=True)
-    user_name = models.CharField(max_length=255)
-    email_id = models.CharField(max_length=255)
+class UserRegistrationModel(AbstractUser):
+    id = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=255,blank=True,unique=True)
+    email = models.EmailField(unique=True,blank=True)
     password = models.CharField(max_length=255)
     confirm_password = models.CharField(max_length=255)
     mobile_number = models.CharField(max_length=10)

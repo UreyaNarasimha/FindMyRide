@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.hashers import check_password
-
+from RiderAuthentication.serializers import get_my_token
 
 class RiderLogin(APIView):
 
@@ -24,7 +24,10 @@ class RiderLogin(APIView):
         if rider:
             is_verified = check_password(data['password'],rider.password)
             if is_verified:
-                return Response({"Message":"Logged in SucssesFully",'data':{}}, status=status.HTTP_201_CREATED )
+
+                data = get_my_token(rider)
+
+                return Response({"Message":"Logged in SucssesFully",'data':data}, status=status.HTTP_201_CREATED )
         
         return Response({'Massage': 'Invalid Ridername and Password',"data":{}}, status=status.HTTP_400_BAD_REQUEST)
 

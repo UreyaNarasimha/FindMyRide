@@ -12,13 +12,18 @@ import csv
 import os
 import json
 from datetime import datetime
+from UserLogin.utils import jwt_check
 
 class AvaliableRiders(APIView):
-
+    
     def post(self,request):
-
-        data = request.data
         
+        token_validation = jwt_check(request) #token validation
+        if not token_validation.status_code == 200:
+            return Response({'message':'Something went wrong','data':{}},status=status.HTTP_400_BAD_REQUEST)
+        
+        data = request.data
+
         serializer = AvaliableRidersserializer(data=data)
         if serializer.is_valid():
            serializer.save()
@@ -75,44 +80,49 @@ class AvaliableRiders(APIView):
         return Response({'message':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
     def get(self,request):
-            
-            query_type = request.query_params.get('query', None)
-            value = request.query_params.get('value', None)  
+                  
+        query_type = request.query_params.get('query', None)
+        value = request.query_params.get('value', None)  
 
-            avaliable_riders_data = AvaliableRidersModel.objects.all()
+        avaliable_riders_data = AvaliableRidersModel.objects.all()
 
-            if query_type == 'search' and value:
-                avaliable_riders_data = avaliable_riders_data.filter(
-                    Q(avaliableriderslist_id__icontains=value) |
-                    Q(rider_id__icontains=value) |
-                    Q(user_id__icontains=value) |
-                    Q(pickup_address__icontains=value) |
-                    Q(pickup_zipcode__icontains=value) |
-                    Q(destination__icontains=value) |
-                    Q(is_cancelled__icontains=value)
-                )
-                if not avaliable_riders_data:
-                    return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
-            
-            elif query_type == 'sort' and value:
-                avaliable_riders_data = avaliable_riders_data.order_by(value)
-                if not avaliable_riders_data:
-                    return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+        if query_type == 'search' and value:
+            avaliable_riders_data = avaliable_riders_data.filter(
+                Q(avaliableriderslist_id__icontains=value) |
+                Q(rider_id__icontains=value) |
+                Q(user_id__icontains=value) |
+                Q(pickup_address__icontains=value) |
+                Q(pickup_zipcode__icontains=value) |
+                Q(destination__icontains=value) |
+                Q(is_cancelled__icontains=value)
+            )
+            if not avaliable_riders_data:
+                return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+        
+        elif query_type == 'sort' and value:
+            avaliable_riders_data = avaliable_riders_data.order_by(value)
+            if not avaliable_riders_data:
+                return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
 
-            paginator = PageNumberPagination()
-            paginator.page_size = 10  # page size
-            paginated_user_data = paginator.paginate_queryset(avaliable_riders_data, request)
-            
-            try:
-              serializer = AvaliableRidersserializer(paginated_user_data,many=True)
-              return paginator.get_paginated_response({'message': 'Avaliable Riders data Details','data':serializer.data})
-            except:
-                return Response({"message":"Something went wrong",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+        paginator = PageNumberPagination()
+        paginator.page_size = 10  # page size
+        paginated_user_data = paginator.paginate_queryset(avaliable_riders_data, request)
+        
+        try:
+            serializer = AvaliableRidersserializer(paginated_user_data,many=True)
+            return paginator.get_paginated_response({'message': 'Avaliable Riders data Details','data':serializer.data})
+        except:
+            return Response({"message":"Something went wrong",'data':{}},status=status.HTTP_400_BAD_REQUEST)
 
 class RideBookings(APIView):
 
     def post(self,request):
-
+ 
+        token_validation = jwt_check(request) #token validation
+        if not token_validation.status_code == 200:
+            return Response({'message':'Something went wrong','data':{}},
+                    status=status.HTTP_400_BAD_REQUEST)
+        
         data = request.data
         
         if 'avaliableriderslist_id' not in data:            
@@ -181,44 +191,49 @@ class RideBookings(APIView):
         return Response({'message':serializer.errors,'data':{}},status=status.HTTP_400_BAD_REQUEST)
 
     def get(self,request):
-            
-            query_type = request.query_params.get('query', None)
-            value = request.query_params.get('value', None)  
+        
+        query_type = request.query_params.get('query', None)
+        value = request.query_params.get('value', None)  
 
-            rides_data = RideBookingModel.objects.all()
+        rides_data = RideBookingModel.objects.all()
 
-            if query_type == 'search' and value:
-                rides_data = rides_data.filter(
-                    Q(Booking_id__icontains=value) |
-                    Q(rider_id__icontains=value) |
-                    Q(user_id__icontains=value) |
-                    Q(pickup_address__icontains=value) |
-                    Q(pickup_zipcode__icontains=value) |
-                    Q(destination__icontains=value) |
-                    Q(is_cancelled__icontains=value)
-                )
-                if not rides_data:
-                    return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
-            
-            elif query_type == 'sort' and value:
-                rides_data = rides_data.order_by(value)
-                if not rides_data:
-                    return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+        if query_type == 'search' and value:
+            rides_data = rides_data.filter(
+                Q(Booking_id__icontains=value) |
+                Q(rider_id__icontains=value) |
+                Q(user_id__icontains=value) |
+                Q(pickup_address__icontains=value) |
+                Q(pickup_zipcode__icontains=value) |
+                Q(destination__icontains=value) |
+                Q(is_cancelled__icontains=value)
+            )
+            if not rides_data:
+                return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+        
+        elif query_type == 'sort' and value:
+            rides_data = rides_data.order_by(value)
+            if not rides_data:
+                return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
 
-            paginator = PageNumberPagination()
-            paginator.page_size = 2  # page size
-            paginated_user_data = paginator.paginate_queryset(rides_data, request)
-            
-            try:
-              serializer = RideBookingsSerailizer(paginated_user_data,many=True)
-              return paginator.get_paginated_response({'message': 'Rides Details','data':serializer.data})
-            except:
-                return Response({"message":"Something went wrong",'data':{}},status=status.HTTP_400_BAD_REQUEST)
-            
+        paginator = PageNumberPagination()
+        paginator.page_size = 2  # page size
+        paginated_user_data = paginator.paginate_queryset(rides_data, request)
+        
+        try:
+            serializer = RideBookingsSerailizer(paginated_user_data,many=True)
+            return paginator.get_paginated_response({'message': 'Rides Details','data':serializer.data})
+        except:
+            return Response({"message":"Something went wrong",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+        
 class UpdateRiderStatus(APIView):
 
     def put(self, request, pk):
         
+        token_validation = jwt_check(request) #token validation
+        if not token_validation.status_code == 200:
+            return Response({'message':'Something went wrong','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+    
         ride_obj = RideBookingModel.objects.filter(Booking_id=pk).first()
         if not ride_obj:
             return Response({'message':'No data found','data':{}},
@@ -277,7 +292,6 @@ class CSVFileGenerator(APIView):
         return Response({'message':'file {} downloaded successfully'.format(file_name),'data':{}},
                         status=status.HTTP_200_OK)
 
-
     def AvaliableRidersCsv(self,request):
         
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -320,7 +334,7 @@ class CSVFileGenerator(APIView):
                         status=status.HTTP_200_OK)
     
     def post(self,request):
-
+        
         action = request.query_params.get('action')  
         if not action:
             return Response({"message": "Action is required feild",'data':{}}, 

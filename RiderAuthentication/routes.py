@@ -1,7 +1,7 @@
 from django.urls import path
-from RiderAuthentication import viewssss
+from RiderAuthentication import views
 
 urlpatterns = [
-    path('rides/login/',viewssss.RiderLogin.as_view()),
-    path('rider/logout/',viewssss.RiderLogout.as_view()),
+    path('login/',views.RiderLogin.as_view()),
+    path('logout/',views.RiderLogout.as_view()),
 ]
