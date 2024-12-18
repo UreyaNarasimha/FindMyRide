@@ -13,6 +13,7 @@ import os
 import json
 from datetime import datetime
 from UserLogin.utils import jwt_check
+from Rides.email import send_email_thread
 
 class AvaliableRiders(APIView):
     
@@ -31,6 +32,7 @@ class AvaliableRiders(APIView):
            avaliable_riders = RiderRegistrationModel.objects.filter(zipcode=data['pickup_zipcode'])
            if avaliable_riders:
                 riders_details = []
+                avaliable_rider_objs = []
                 for avaliable_rider in avaliable_riders:
                     if RideBookingModel.objects.filter(rider_id = avaliable_rider.id, #getting riders who currently has no bookings
                                                        is_ride_completed = False).exists(): 
@@ -42,6 +44,7 @@ class AvaliableRiders(APIView):
                             'rider_mobile_number':avaliable_rider.mobile_number
                         } 
                         riders_details.append(booking)
+                        avaliable_rider_objs.append(avaliable_rider)
                 
                 if not riders_details:
                     return Response({'message':'Riders not avliable at this location','data':{}},
@@ -54,7 +57,7 @@ class AvaliableRiders(APIView):
                     'destination':data['destination'],
                     'riders_details': riders_details
                 }
-                
+
                 try:
                     avaliableriders_obj = AvaliableRidersModel.objects.create(**avaliable_riders_details)
                 except:
@@ -63,7 +66,9 @@ class AvaliableRiders(APIView):
                 
            else:
                 return Response({'message':'Riders not avliable at this location','data':{}},
-                                status=status.HTTP_400_BAD_REQUEST)
+                                status=status.HTTP_400_BAD_REQUEST)                  
+           
+           send_email_thread(avaliable_rider_objs, data['pickup_address'], data['destination'])  #sendimg emails to avalible riders  
            
            avaliable_riders_details['avaliableriderslist_id'] = avaliableriders_obj.avaliableriderslist_id #adding avaliable riders list id to output
 

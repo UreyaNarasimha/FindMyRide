@@ -208,7 +208,19 @@ def SendOTP(user):
    
     # Send OTP to the user's email
     subject = "Your OTP Code"
-    message = f"Dear {user.username},\n\nYour OTP code is {otp}. This code is valid for 5 minutes.\n\nThank you."
+    message = f""" Dear {user.username},
+    
+Your OTP code is {otp}. 
+This code is valid for 5 minutes.
+    
+If you didn't request this otp, please ignore this email
+
+Thank you for being a valued partner!
+
+Best Regards,
+FindMyRide
+    
+    """
     recipient_email = user.email
 
     try:

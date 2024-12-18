@@ -19,7 +19,7 @@ class RiderRegistrationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = RiderRegistrationModel
-        fields = ['rider_id','rider_name','email_id','password','confirm_password','mobile_number','student_id',
+        fields = ['id','rider_name','email_id','password','confirm_password','mobile_number','student_id',
                   'university_name','drivers_license_id','address','zipcode','is_active','created_at','updated_at']
     
     def validate(self,validated_data):
