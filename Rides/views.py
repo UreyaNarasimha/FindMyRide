@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from Rides.serializers import AvaliableRidersserializer, RideBookingsSerailizer
+from Rides.serializers import AvaliableRidersserializer, RideBookingsSerailizer, User_and_Rider_RideBookingsSerailizer
 from Rides.models import AvaliableRidersModel, RideBookingModel, BookingLogs, AvaliableRidersLogs
 from RiderRegistration.models import RiderRegistrationModel
 from UserRegistration.models import UserRegistrationModel
@@ -23,7 +23,7 @@ class AvaliableRiders(APIView):
             return Response({'message':'Something went wrong','data':{}},status=status.HTTP_400_BAD_REQUEST)
         
         data = request.data
-
+        
         serializer = AvaliableRidersserializer(data=data)
         if serializer.is_valid():
            serializer.save()
@@ -32,12 +32,12 @@ class AvaliableRiders(APIView):
            if avaliable_riders:
                 riders_details = []
                 for avaliable_rider in avaliable_riders:
-                    if RideBookingModel.objects.filter(rider_id = avaliable_rider.rider_id,
-                                                       is_ride_completed = False).exists():
+                    if RideBookingModel.objects.filter(rider_id = avaliable_rider.id, #getting riders who currently has no bookings
+                                                       is_ride_completed = False).exists(): 
                         pass
                     else:
                         booking = {
-                            'rider_id':avaliable_rider.rider_id,
+                            'rider_id':avaliable_rider.id,
                             'rider_name':avaliable_rider.rider_name,
                             'rider_mobile_number':avaliable_rider.mobile_number
                         } 
@@ -65,9 +65,10 @@ class AvaliableRiders(APIView):
                 return Response({'message':'Riders not avliable at this location','data':{}},
                                 status=status.HTTP_400_BAD_REQUEST)
            
-           avaliable_riders_details['avaliableriderslist_id'] = avaliableriders_obj.avaliableriderslist_id
+           avaliable_riders_details['avaliableriderslist_id'] = avaliableriders_obj.avaliableriderslist_id #adding avaliable riders list id to output
 
-           log = {
+           #creating logs
+           log = {     
                'avaliableriders_details': avaliable_riders_details
            }
 
@@ -81,12 +82,12 @@ class AvaliableRiders(APIView):
 
     def get(self,request):
                   
-        query_type = request.query_params.get('query', None)
+        query_type = request.query_params.get('query', None) #getting data from query params
         value = request.query_params.get('value', None)  
 
         avaliable_riders_data = AvaliableRidersModel.objects.all()
 
-        if query_type == 'search' and value:
+        if query_type == 'search' and value: #search
             avaliable_riders_data = avaliable_riders_data.filter(
                 Q(avaliableriderslist_id__icontains=value) |
                 Q(rider_id__icontains=value) |
@@ -99,12 +100,13 @@ class AvaliableRiders(APIView):
             if not avaliable_riders_data:
                 return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
         
-        elif query_type == 'sort' and value:
+        elif query_type == 'sort' and value: #sorting
             avaliable_riders_data = avaliable_riders_data.order_by(value)
             if not avaliable_riders_data:
                 return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
 
-        paginator = PageNumberPagination()
+        #pagination
+        paginator = PageNumberPagination() 
         paginator.page_size = 10  # page size
         paginated_user_data = paginator.paginate_queryset(avaliable_riders_data, request)
         
@@ -133,6 +135,7 @@ class RideBookings(APIView):
         if serializer.is_valid():
             serializer.save()
             
+            #validating whether we recieved same details as we fetched in avaliable riders 
             avaliable_riders_obj = AvaliableRidersModel.objects.filter(avaliableriderslist_id=data['avaliableriderslist_id'])
             if not avaliable_riders_obj:
                 return Response({"message":"Something went wrong or Ride is cancelled",'data':{}},
@@ -144,14 +147,14 @@ class RideBookings(APIView):
                 return Response({"message":"Rider Id is mismatching",'data':{}},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-            user_details = UserRegistrationModel.objects.filter(user_id=data['user_id'],is_active=True).first()
+            user_details = UserRegistrationModel.objects.filter(id=data['user_id'],is_active=True).first()
             if not user_details:
                return Response ({'message':'User not found','data':{}},status=status.HTTP_400_BAD_REQUEST)
-            rider_details = RiderRegistrationModel.objects.filter(rider_id=data['rider_id'],is_active=True).first()
+            rider_details = RiderRegistrationModel.objects.filter(id=data['rider_id'],is_active=True).first()
             if not rider_details:
                return Response ({'message':'Rider not found','data':{}},status=status.HTTP_400_BAD_REQUEST)
             
-            del data['avaliableriderslist_id']
+            del data['avaliableriderslist_id'] #deleting key from request
 
             try:
                 booking_obj = RideBookingModel.objects.create(**data)
@@ -163,12 +166,12 @@ class RideBookings(APIView):
             
             booking_details = { 'booking_id': booking_obj.Booking_id,
                                 'user_details': {
-                                    'user_id': user_details.user_id,
-                                    'user_name': user_details.user_name,
+                                    'user_id': user_details.id,
+                                    'user_name': user_details.username,
                                     'user_mobile_number':user_details.mobile_number
                                 },
                                 'rider_details': {
-                                    'rider_id': rider_details.rider_id,
+                                    'rider_id': rider_details.id,
                                     'rider_name': rider_details.rider_name,
                                     'rider_mobile_number':rider_details.mobile_number
                                 },
@@ -187,7 +190,7 @@ class RideBookings(APIView):
             except:
                 return Response({'message':'Something went wrong','data':{}},status=status.HTTP_400_BAD_REQUEST)
             
-            return Response({'message':'Booking Successfull','data':booking_details},status=status.HTTP_201_CREATED)
+            return Response({'message':'Booking Successfull','data':booking_details},status=status.HTTP_200_OK)
         return Response({'message':serializer.errors,'data':{}},status=status.HTTP_400_BAD_REQUEST)
 
     def get(self,request):
@@ -197,7 +200,7 @@ class RideBookings(APIView):
 
         rides_data = RideBookingModel.objects.all()
 
-        if query_type == 'search' and value:
+        if query_type == 'search' and value: #search
             rides_data = rides_data.filter(
                 Q(Booking_id__icontains=value) |
                 Q(rider_id__icontains=value) |
@@ -215,8 +218,9 @@ class RideBookings(APIView):
             if not rides_data:
                 return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
 
+        #pagination
         paginator = PageNumberPagination()
-        paginator.page_size = 2  # page size
+        paginator.page_size = 10  # page size
         paginated_user_data = paginator.paginate_queryset(rides_data, request)
         
         try:
@@ -279,7 +283,7 @@ class CSVFileGenerator(APIView):
             for i in data:
                 rides_booking_dict = i.__dict__
 
-                del rides_booking_dict['_state']
+                del rides_booking_dict['_state'] #deleting key
 
                 try:
                     writer.writerow(rides_booking_dict)
@@ -344,3 +348,123 @@ class CSVFileGenerator(APIView):
         elif action == 'AvaliableRidersCsv':
             return self.AvaliableRidersCsv(request)
         return Response({"message": "Invalid action",'data':{}}, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserBookings(APIView):
+
+    def get(self, request):
+        
+        token_validation = jwt_check(request) #token validation
+        if not token_validation.status_code == 200:
+            return Response({'message':'Something went wrong','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response({'message':'User ID is required feild','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        query_type = request.query_params.get('query', None)
+        value = request.query_params.get('value', None)  
+        
+        user_obj = UserRegistrationModel.objects.filter(id=user_id,is_active=True)
+        if not user_obj:
+            return Response({'message':'User not found','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        rides_data = RideBookingModel.objects.filter(user_id = user_id)
+
+        if query_type == 'search' and value:
+            rides_data = rides_data.filter(
+                Q(Booking_id__icontains=value) |
+                Q(pickup_address__icontains=value) |
+                Q(pickup_zipcode__icontains=value) |
+                Q(destination__icontains=value) 
+            )
+            if not rides_data:
+                return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+        
+        elif query_type == 'sort' and value:
+            rides_data = rides_data.order_by(value)
+            if not rides_data:
+                return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 10  # page size
+        paginated_user_data = paginator.paginate_queryset(rides_data, request)
+        
+        try:
+            serializer = User_and_Rider_RideBookingsSerailizer(paginated_user_data,many=True)
+            return paginator.get_paginated_response({'message': 'Rides Details','data':serializer.data})
+        except:
+            return Response({"message":"Something went wrong",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+
+class RiderBookings(APIView):
+
+    def get(self, request):
+        
+        token_validation = jwt_check(request) #token validation
+        if not token_validation.status_code == 200:
+            return Response({'message':'Something went wrong','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        rider_id = request.query_params.get('rider_id')
+        if not rider_id:
+            return Response({'message':'Rider ID is required feild','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        query_type = request.query_params.get('query', None)
+        value = request.query_params.get('value', None)  
+        
+        rider_obj = RiderRegistrationModel.objects.filter(id=rider_id,is_active=True)
+        if not rider_obj:
+            return Response({'message':'Rider not found','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        rides_data = RideBookingModel.objects.filter(rider_id = rider_id)
+
+        if query_type == 'search' and value:
+            rides_data = rides_data.filter(
+                Q(Booking_id__icontains=value) |
+                Q(pickup_address__icontains=value) |
+                Q(pickup_zipcode__icontains=value) |
+                Q(destination__icontains=value) 
+            )
+            if not rides_data:
+                return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+        
+        elif query_type == 'sort' and value:
+            rides_data = rides_data.order_by(value)
+            if not rides_data:
+                return Response({"message":"No Data Found",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 10  # page size
+        paginated_user_data = paginator.paginate_queryset(rides_data, request)
+        
+        try:
+            serializer = RideBookingsSerailizer(paginated_user_data,many=True)
+            return paginator.get_paginated_response({'message': 'Rides Details','data':serializer.data})
+        except:
+            return Response({"message":"Something went wrong",'data':{}},status=status.HTTP_400_BAD_REQUEST)
+
+class SpeficRideBookingDetails(APIView): #api for getting spefic booking details by rider and user
+
+    def get(self,request,pk):
+        
+        token_validation = jwt_check(request) #token validation
+        if not token_validation.status_code == 200:
+            return Response({'message':'Something went wrong','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        ride_obj = RideBookingModel.objects.filter(Booking_id = pk).first()
+        if not ride_obj:
+            return Response({'message':'Ride with Booking ID {} not found'.format(pk),'data':{}},
+                            status = status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            serializer = User_and_Rider_RideBookingsSerailizer(ride_obj)
+            return Response({'message': 'Rides Details','data':serializer.data},
+                            status=status.HTTP_200_OK)
+        except:
+            return Response({"message":"Something went wrong",'data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)

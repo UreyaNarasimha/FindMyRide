@@ -69,14 +69,14 @@ class UserRegistrationDetail(APIView):
     
     def get(self,request,pk):
         
-        user = self.get_object(pk)
+        user = self.get_object(pk) #for spefic user details
         if user:
            serializer = UserRegistrationSerializer(user)
            return Response({'message':'User Details','data':serializer.data},status=status.HTTP_200_OK)
         return Response({'message':'User not found','data':{}},status=status.HTTP_400_BAD_REQUEST)
 
         
-    def delete(self, request, pk):
+    def delete(self, request, pk): # for activating and deactivating users
     
         user = self.get_object(pk)
         if not user:
@@ -90,5 +90,4 @@ class UserRegistrationDetail(APIView):
         user.save()
         serializer = UserRegistrationSerializer(user)
         return Response({'message': message,'data':serializer.data},status=status.HTTP_200_OK)
-
 

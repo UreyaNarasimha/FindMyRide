@@ -20,12 +20,12 @@ class RiderRegistration(APIView):
     
     def get(self,request):
         
-        query_type = request.query_params.get('query', None)
+        query_type = request.query_params.get('query', None) #getting data from params
         value = request.query_params.get('value', None)  
 
         rider_data = RiderRegistrationModel.objects.all()
 
-        if query_type == 'search' and value:
+        if query_type == 'search' and value: #search functonality
             rider_data = rider_data.filter(
                 Q(rider_name__icontains=value) |
                 Q(email_id__icontains=value)
@@ -76,7 +76,7 @@ class RiderRegistrationDetail(APIView):
         return Response({'message':'Rider not found','data':{}},status=status.HTTP_400_BAD_REQUEST)
 
         
-    def delete(self, request, pk):
+    def delete(self, request, pk): #activating and inactivating rider
     
         rider = self.get_object(pk)
         if not rider:

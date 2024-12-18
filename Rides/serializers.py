@@ -56,6 +56,13 @@ class RideBookingsSerailizer(serializers.ModelSerializer):
         
         return validated_data
 
-        
+class User_and_Rider_RideBookingsSerailizer(serializers.ModelSerializer): 
+    
+    class Meta:
+        model = RideBookingModel
+        fields = ['Booking_id','pickup_address','pickup_zipcode',
+                  'destination','is_cancelled','created_at','updated_at']
+    
+    
         
     

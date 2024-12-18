@@ -72,7 +72,7 @@ def jwt_check(request): #authenticating token using function
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
         
-        if not decoded_token.get("type"):
+        if not any(item in ['user', 'rider'] for item in decoded_token.get("type", [])):
             return Response(
                     {"message": "You are not authorized to this URL",'data':{}},
                     status=status.HTTP_401_UNAUTHORIZED,

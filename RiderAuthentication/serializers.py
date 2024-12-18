@@ -6,7 +6,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, rider):
         token = super().get_token(rider)
-                
+
+        #adding required details to token        
         token['type'] = ['rider']
         token['username'] = rider.rider_name
         token['email'] = rider.email_id

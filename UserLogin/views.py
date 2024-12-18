@@ -14,6 +14,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.timezone import now
 from UserLogin.serializers import get_my_token
+from django.contrib.auth.hashers import check_password, make_password
+from UserLogin.utils import jwt_check
 
 class UserLogin(APIView):
     
@@ -54,14 +56,7 @@ class UserLogin(APIView):
 
                 data = get_my_token(user)
                             
-                # refresh = RefreshToken.for_user(user)
-                # access_token = str(refresh.access_token)
-
-                # data = {
-                #     "access": access_token,
-                #     "refresh": str(refresh)
-                # }
-                
+                #sending OTP               
                 try:
                     otp = SendOTP(user)  
                 except:
@@ -110,7 +105,7 @@ class OTPGenerator(APIView):
             return Response({'message':'User not found','data':{}},status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            otp = SendOTP(user_obj)
+            otp = SendOTP(user_obj) #sending OTP
             return otp
         except:
             return Response ({"message": "Something went wrong",'data':{}},
@@ -121,7 +116,6 @@ class OTPVerification(APIView):
     def post(self,request):
         
         try:
-            import pdb;pdb.set_trace()
             data = request.data
 
             if 'user_id' not in data:
@@ -135,7 +129,9 @@ class OTPVerification(APIView):
             if not user_obj:
                 return Response({'message':'User not found','data':{}},
                                 status=status.HTTP_400_BAD_REQUEST)
-            otp_obj = OTP.objects.filter(user_id=data['user_id'],otp=data['otp']).first()
+            
+            #validating whether the otp belongs to correct user or not
+            otp_obj = OTP.objects.filter(user_id=data['user_id'],otp=data['otp']).first() 
             if not otp_obj:
                 return Response({'message':'Invalid OTP!','data':{}},status=status.HTTP_400_BAD_REQUEST)            
             
@@ -144,12 +140,47 @@ class OTPVerification(APIView):
             if otp_obj.is_expired == True or now() > expiry_time:
                 return Response({'message':'OTP Expired','data':{}},status=status.HTTP_400_BAD_REQUEST)
             
-            otp_obj.is_expired = True
+            otp_obj.is_expired = True #making otp as expired after validating
             otp_obj.save()
             return Response({'message':'OTP Verified Successfully','data':{}},status=status.HTTP_200_OK)            
         
         except:
-            return Response({'message':'Something went wrong','data':{}},status=status.HTTP_400_BAD_REQUEST)            
+            return Response({'message':'Something went wrong','data':{}},status=status.HTTP_400_BAD_REQUEST)  
+
+class ChangePassword(APIView):
+
+    def post(self,request):
+        
+        token_validation = jwt_check(request) #token validation
+        if not token_validation.status_code == 200:
+            return Response({'message':'Something went wrong','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        data = request.data
+        
+        if 'user_id' not in data:
+            return Response({'message':'User ID is required feild','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if 'old_password' not in data:
+            return Response({'message':'Old Password is required feild','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if 'new_password' not in data:
+            return Response({'message':'New Password is required feild','data':{}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        user = UserRegistrationModel.objects.filter(id=data['user_id'],is_active=True).first()
+        
+        if user:
+            is_verified = check_password(data['old_password'],user.password)
+            if is_verified:
+                password = make_password(data['new_password']) #hashing password
+                user.password = password
+                user.confirm_password = password
+                user.save()
+                return Response({'message':'password updated succesfully','data':{}},
+                                status=status.HTTP_200_OK)
+        return Response({'message':'Something went wrong','data':{}},
+                        status=status.HTTP_400_BAD_REQUEST)          
 
 def SendOTP(user):
 
