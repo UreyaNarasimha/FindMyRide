@@ -215,7 +215,7 @@ This code is valid for 5 minutes.
     
 If you didn't request this otp, please ignore this email
 
-Thank you for being a valued partner!
+Thank you for being our valued customer!
 
 Best Regards,
 FindMyRide
